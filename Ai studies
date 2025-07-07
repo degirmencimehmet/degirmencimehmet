@@ -1,0 +1,78 @@
+AI ILE ÇALIŞIRKEN ÖĞRENDIĞIM BAZI KISIMLAR VE ONLARIN NOT HALINDE ÇIKMIŞLARI
+
+TF-IDF
+term frequency(count) - ınverse document frequency(how many documents this word appears in)
+kelime sıklığı - terimin ne kadar ayırt edici olduğu
+
+bir kelimenin belgede ne kadar önemli olduğunu ölçmeye yarar
+
+intuitive idea
+
+       term frequency
+-----------------------------  = TF-IDF
+ inverse document frequency
+
+TF(t, d) = kelimenin belge d içinde geçme sayısı / belge d'deki toplam kelime sayısı
+IDF(t) = log(Toplam belge sayısı / (Kelimeyi içeren belge sayısı + 1))+1  smooth idf 
+
+Stopword’leri (the, is, and) otomatik olarak baskılar çünkü onlar her belgede vardır → IDF’leri düşüktür.
+Özel ve az geçen kelimeleri öne çıkarır → IDF’leri yüksektir.
+Hem belgeye özel hem belgeye göre ayırt edici kelimeleri tespit eder.
+
+tfidf(t,d)= tf(t,d) x idf(t)
+
+----------------------------TERM FREQUENCY (TF)--------------------------------------------------------
+
+CoutVectorizerda çağırdığımız şeyde gelen budur
+
+pythonda nasıl kullanılır:::
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+tfidf=TfidfVectorizer(
+     bu kısma parametreler gelebilir  )  burada modeli oluşturduk we create the model
+
+^^^^örnek^^^
+tfidf = TfidfVectorizer(
+    stop_words='english',             # İngilizce stopword'leri çıkarır
+    tokenizer=my_tokenizer,           # Kendi yazdığın tokenizer fonksiyonunu kullanır
+    strip_accents='unicode',          # Aksanlı harfleri düzleştirir ("ç" -> "c", "ş" -> "s")
+    max_df=0.9,                       # %90'dan fazla dokümanda geçen kelimeleri dışlar
+    min_df=5,                         # En az 5 dokümanda geçen kelimeleri alır
+    ngram_range=(1, 2)                # Unigram ve bigram kullanır
+)
+^^^^^^^^^^^^^^^^
+
+Xtrain = tfidf.fit_transform(train_texts)
+Xtest = tfidf.transform(test_texts)
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+eucledian distanceda mesafe bulacağız
+mesafe similaritynin tersi olarak düşüneceğiz
+eğer iki vektör uzak taraflara düşerse bu iki vektörün benzerliğinin az olduğunu gösterir = dissimilar
+
+similarity e bakmanın başka bir yolu da aralarındaki açıya bakmak
+aralarındaki açı genelde cosine
+kosinüs fonksiyonundaki değerler bize vektörlerin ne kadar benzediğini gösterir
+1 __              __   bu kısımlarda tamamen aynı olacak şekilde oluyor
+   _           _       yani most similar
+    _         _
+-----_-------_-------- 0
+      _     _
+       _   _
+-1      __            bu kısımda ise tamamen farklı anlamına geliyor çünkü aralarındaki açı tamamen 180
+
+
+cosine distance = 1 - cosine similarity
+
+cosine distance eucladian distancea göre daha mantıklı bir seçim oluyor çünkü eucladian distance kelimelerin
+çoğunluğuna göre davrandığı için az x kelimesi ile az y kelimesi birbirinden tamamen farklı olsa bile eucladian
+distanceda similaritysi yüksek çıkabiliyor fakat cosine distanceda x ve y tamamen birbirinden farklı olduğu için
+aralarındaki açı 180 derece oluyor . cosinde distance daha güvenilir bir çözüm yolu
+
+
+
+
