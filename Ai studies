@@ -74,5 +74,79 @@ distanceda similaritysi yüksek çıkabiliyor fakat cosine distanceda x ve y tam
 aralarındaki açı 180 derece oluyor . cosinde distance daha güvenilir bir çözüm yolu
 
 
+------------------------------------------------------------------------------------------------------------------------------------
+
+-------------------------------------------- STEMMING AND LEMMATIZATION ------------------------------------------------------------
+
+import nltk
+from nltk.stem import PorterStemmer
+porter = PorterStemmer()
+
+print(porter.stem("walk"))  # walk
+print(porter.stem("walking"))  #walk
+print(porter.stem("walked"))    #walk
+print(porter.stem("walking"))   #walk
+print(porter.stem("replacement"))  #replac !!!! burada stemmingin yanlış da karar verdiğini gördük
+
+sentence = "Lemmatization is more sophisticated than stemming".split()
+
+print(sentence)  # split methodu ile bütün kelimeler ayrıldı
+
+for token in sentence: (
+print(porter.stem(token), end=" "),  # burada print içindeki porter.stem(token) ile de bütün
+    # tokenların stemming işlemi yapıldı
+)
+
+
+print(porter.stem("\nunnecessary"))  # burada sonu y ile biteni i ile yazdırıyor "unnecessari"
+
+from nltk.stem import WordNetLemmatizer
+
+from nltk.corpus import wordnet
+lemmatizer = WordNetLemmatizer()
+print(lemmatizer.lemmatize("as"))
+print(lemmatizer.lemmatize("walking"))
+print(lemmatizer.lemmatize("walking" ,pos = wordnet.VERB))   #bu kısımda walkingin verb olarak algıladı
+                                                                    # ve sonundaki ing takısını kaldırmış oldu
+
+print(lemmatizer.lemmatize("going"))
+
+print(lemmatizer.lemmatize("going" ,pos = wordnet.VERB))    #go gelmiş olacak
+
+lemmatizer.lemmatize("going", pos=wordnet.VERB)   # verb olduğunu belirttik ve go olarak aldı
+lemmatizer.lemmatize("ran", pos=wordnet.VERB)     # verb olarak geçmiş halde olduğunu bildi ve run olarak aldı
+porter.stem("mice")             #  stemde herhangi bir değişiklik yapmadı mice olarak kalır
+lemmatizer.lemmatize("mice")    #  lemmatizerda miceın mousedan geldiğini bildiği için mouse olarak aldı
+porter.stem("was")              #  stemde tekrardan ne olduğunu bilmediği için wa olarak aldı
+lemmatizer.lemmatize("was", pos=wordnet.VERB)       # burada verb olarak verdik geçmiş zaman o yüzden be aldı
+porter.stem("is")           #  stemde is olur
+lemmatizer.lemmatize("is", pos=wordnet.VERB)            # tekrardan be olur
+porter.stem("better")           #  stemde better olarak bırakır kısaltma yapmaz
+lemmatizer.lemmatize("better", pos=wordnet.ADJ)         # burada kelimenin türü adj dedik ve o yüzden good
+                                                              # olarak aldı kelimenin kökünü biliyor
+
+
+
+def get_wordnet_pos(treebank_tag):
+  if treebank_tag.startswith('J'):
+    return wordnet.ADJ
+  elif treebank_tag.startswith('V'):
+    return wordnet.VERB                                 # burada fonskiyon tanımlamış olduk bu fonksiyon bizim
+  elif treebank_tag.startswith('N'):                    # vereceğimiz harfe göre wordnet türünü belirleyecek
+    return wordnet.NOUN                                 # bir nevi bir kısaltma yapmış olduk
+  elif treebank_tag.startswith('R'):
+    return wordnet.ADV
+  else:
+    return wordnet.NOUN
+
+sentence = "Donald Trump has a devoted following".split()
+
+
+words_and_tags = nltk.pos_tag(sentence)
+print(words_and_tags)
+
+
+
+
 
 
