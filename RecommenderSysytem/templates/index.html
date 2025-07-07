@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Film Öneri Sistemi</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f8f8f8; padding: 40px; }
+        .container { width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #333; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; }
+        ul { list-style-type: none; padding: 0; }
+        li { background: #eee; margin: 5px 0; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Film Öneri Sistemi</h1>
+    <form method="POST">
+        <input type="text" name="film" placeholder="Film adı girin..." required>
+        <button type="submit">Öneri Al</button>
+    </form>
+
+    {% if results and results|length > 0 %}
+        <h2>"{{ title }}" için öneriler:</h2>
+        {% if results is string %}
+            <p>{{ results }}</p>
+        {% else %}
+            <ul>
+                {% for movie in results %}
+                    <li>{{ movie }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endif %}
+</div>
+</body>
+</html>
