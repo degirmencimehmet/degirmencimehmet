@@ -1,0 +1,142 @@
+This code generates 4 row poetries by using the Markov Model. Next to every codes there is explanation in Turkish.
+
+#%%
+import numpy as np
+import string
+
+import pandas as pd
+
+np.random.seed(1234)
+#%%
+initial = {}
+first_order = {}
+second_order = {}
+# olasılıkları göstermek için bir sözlük inşaa ettik
+
+#%%
+def remove_punctuation(s):
+    return s.translate(str.maketrans('', '', string.punctuation))
+#%%
+#!wget -nc https://raw.githubusercontent.com/lazyprogrammer/machine_learning_examples/master/hmm_class/robert_frost.txt
+# !wget -nc https://huggingface.co/datasets/asoria/love-poems/embed/viewer/default/train
+#with open("love.txt", "r", encoding="utf-8") as f:
+#    lines = f.readlines()
+#%%
+
+def add2dict(d, k ,v):  # dictionary , key , value
+    if k not in d:
+        d[k] = []
+        d[k].append(v)
+
+#%%
+for line in open('love.txt'):  #txt dosyasının ismini değiştir # dosyayı açıyor for döngüsü içinde lineları gezecek şekilde
+  tokens = remove_punctuation(line.rstrip().lower()).split()    # her bir kelimeyi tokenlerine ayırıyor
+
+  T = len(tokens)   # T adında bir değişken o satırdaki kelime uzunluğu kadar
+  for i in range(T):   # her i için T nin rangei kadar for döner
+    t = tokens[i]    # her bir tokenin i indexinde t tanımlıyoruz
+    if i == 0:       # eğer i 0 ise yani ilk word ise
+      # measure the distribution of the first word
+      initial[t] = initial.get(t, 0.) + 1      # bir kelimenin satırın ilk kısmında kaç defa geçtiğini sayar yani artırır
+                                               # eğer o kelime initial sözlüğünde değilse 0. float olarak atar
+    else:
+      t_1 = tokens[i-1]    # değilse t_1 tokenin i indexinin bir eksiği olur yani bir önceki kelimeye geçer
+      if i == T - 1:       # eğer bu kelime satırın son kelimesi ise
+        # measure probability of ending the line
+        add2dict(second_order, (t_1, t), 'END')   #secondordera  sonuna END ekler
+      if i == 1:   # eğer bu 2.kelime (yani t) ise bir önceki kelime t_1 yani 1. kelimedir
+        # measure distribution of second word
+        # given only first word
+        add2dict(first_order, t_1, t)   # eğer t_1 1.kelime ise t yani 2. kelime sözlükte yoktur ve sözlükte olmadığı için t valuesu sözlüğe eklenir
+
+      else:  # bu blok 2.kelime değilse yani 3 veya daha fazlası ise çalışır
+        t_2 = tokens[i-2]   # burada 2 önceki kelime alınır
+        add2dict(second_order, (t_2, t_1), t)   # burada ise t_2 ve t_1 kelimesinden sonra gelen t kelimesi ne kadar sıklkıta görülüyor onu anlamış oluruz . Bu şekilde 2 kelimenin sonrasında kullanılacak olan kelimenin olaslığını bir sözlüğe kaydetmiş oluruz.
+#%%
+# normalize the distributions
+initial_total = sum(initial.values())    # initial_total ile bu satır başındaki kelimelerin yani initial sözlüğündeki kelimelerin
+                                          # bütün toplamı alınır ki başlangıç kelimesinin olasılığını bulalım.
+for t, c in initial.items():              # burada .items() fonskiyonu şu şekilde : ("i",2.0) döndürür ,t kelimeyi refer eder
+                                          # c de bunun kaç defa geçtiğini refer eder
+    initial[t] = c / initial_total        # initial t indexine c yani kaç defa geçtiği / geçen total sayı   yazdırılır
+                                          # bu şekilde biz başlangıç kelimesinin hangi oranlarda olduğunu buluruz.
+                                          # aslında tnin değerinde işlem yapmış olduk
+
+#%%
+# convert [cat, cat, cat, dog, dog, dog, dog, mouse, ...]
+# into {cat: 0.5, dog: 0.4, mouse: 0.1}
+
+def list2pdict(ts):   # kelime listesi ts yerine girilecek
+  # turn each list of possibilities into a dictionary of probabilities
+  d = {}       #geçici bir sözlük oluşturuluyor
+  n = len(ts)  # o kelime listesinin uzunluğu n sayısına atanıyor
+  for t in ts: # ts listesi içindeki elemanlardan token alınıyor
+    d[t] = d.get(t, 0.) + 1  # sözlükteki token yerine get fonksiyonu ile olasılık yazılıyor
+  for t, c in d.items():   # t,c parametreleri ile d sözlüğündeki items kısmından (yani sözlük elemanlarından)
+    d[t] = c / n      # sözlükteki tokenın karşısına değerinin bütün sayılara bölümü yapılıyor
+                      # gives us prob to each token
+  return d    # sonda d sözlüğünü return ediyor
+
+#%%
+for t_1, ts in first_order.items():  # bu döngü first_order sözlüğündeki tüm key-value pairlerini dolaşır
+                                     # t_1 bu cümlenin başındaki ilk kelime
+                                     # ts de bu kelimeden sonra gelen kelimelerin listesi !!
+  # replace list with dictionary of probabilities
+  first_order[t_1] = list2pdict(ts)   # burada liste olan ts fonksiyonla beraber olaslığa çevrilir
+                                     # ardından bu değer tekrar first_orderda t_1. indexe atanır
+                                     # yani first_order sözlüğü liste tutmuyor onun yerine ilk kelimem x oldu
+                                     # bundan sonra gelebilecek olan içeriklerin olasılık dağılımını tutuyor
+#%%
+for k, ts in second_order.items():
+  second_order[k] = list2pdict(ts)  # bu kısım öncesinde belli olan 2 kelimenin sonrasında ne geleceğine dair belli bir kelimegrubu
+                                    # tutuyordu ama biz bu kelime grubu yerine olasılık istiyoruz bu olasılıklar şu şekilde işliyor
+                                    # mesela ben i ve am kelimelerini seçtim bundan sonra gelecek olan kısımlar happy sad gibi
+                                    # şeyler olduğu için bunların da kendi içinde belli olasılıkları var . mesela happyden 3 tane
+                                    # sadden 2 tane falan var . işte bu kısımların olasılıkları da lazım olduğu için bu işlem
+                                    # yapılıyor
+#%%
+def sample_word(d):    # bu fonk d adında bir olasılık sözlüğü alır bu kelime : olasılık şeklinde bir sözlük
+  # print "d:", d
+  p0 = np.random.random()  # p0 0.0 ile 1.0 arasında bir sayı üretir bu sayı seçim yapılacak olasılık aralığını belirler
+  # print "p0:", p0
+  cumulative = 0        # her kelimenin olasılığı buraya sonradan eklenecek o yüzden 0 ile başladık
+  for t, p in d.items():  # d sözlüğünde kelime : olasılık şeklindeydi bu d den t ve p parametreleri ile alınır
+    cumulative += p       # her bir olasılık cumulative e eklenir ve devam eder
+    if p0 < cumulative:   # eğer rastgele seçilen p0 cumulative toplamından küçük olursa
+      return t            # t yani kelime döndürülür
+  assert(False) # should never get here
+#%%
+def generate():
+  for i in range(4): # generate 4 lines   # bizden 4 tane kelime seçerek oluşturmamız söylendi
+    sentence = []    # oluşturalacak cümle için liste açıyoruz
+
+    # initial word
+    w0 = sample_word(initial)    # w0 bizim ilk kelimemiz olacak ve initial olasılık dağılımından çekilir
+    sentence.append(w0)          # yani hangi kelime ile şiire başlansın onu belirleriz  # sentence listesine append edilir
+
+    # sample second word
+    w1 = sample_word(first_order[w0])   # ilk kelimeye göre (w0) ikinci kelime first order fonksiyonu ve sample_word ile seçilir
+    sentence.append(w1)      # sentence listesine append edilir
+
+    # second-order transitions until END
+    while True:
+      w2 = sample_word(second_order[(w0, w1)]) # 3. kelime diğer 2 kelime ile ilgili olacağından second orderda w0 ve w1 alınarak
+      if w2 == 'END':              # 3. kelime üretilir ve eğer 3. kelime END'e eşitse  burada program sonlanır
+        break
+      sentence.append(w2)         # eşit olmadığı durumlarda sentence a ekleme yapılır
+      w0 = w1                     # burası çok önemli , algoda da gördüğün kadarıyla burada w0 artık w1 olur w1 de artık w2 olur
+      w1 = w2                     # böylece istenen sayıda kelime seçilmeye devam edilir.
+    print(' '.join(sentence))
+#%%
+print("This Ai generated poetry:")
+print("-----------------------------------------")
+for a in range(5):
+    generate()
+    print("------------------------------------")
+#%%
+
+#%%
+
+
+
+
