@@ -1,1 +1,3 @@
-
+📘 Project: Semantic Question Generation using LSA and Cosine Similarity
+This notebook demonstrates a semantic analysis and question generation system using Python and natural language processing techniques.
+It aims to generate meaningful, multiple-choice questions from a provided corpus of academic book titles and analyze user responses semantically.
